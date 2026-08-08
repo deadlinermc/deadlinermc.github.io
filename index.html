@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2f9d5b">
+<title>Deadliner SMP — A Small World. Endless Adventures.</title>
+<style>
+
+
+:root{
+  --grass:#59c63a; --grass-dark:#2f7e2d; --dirt:#8b542f; --dirt-dark:#5c351f;
+  --stone:#87929a; --stone-dark:#454c52; --wood:#a96b35; --wood-dark:#6f411f;
+  --diamond:#42e8ef; --gold:#ffd447; --purple:#b96cff; --lava:#ff7a18; --sky:#56c9ff;
+  --white:#f6fbff; --ink:#14211a; --panel:#18251f; --panel2:#202f28;
+  --shadow:0 14px 0 rgba(0,0,0,.25),0 24px 45px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  color:var(--white); background:#101914; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  overflow-x:hidden; line-height:1.65;
+}
+body:before{
+  content:"";position:fixed;inset:0;z-index:-5;
+  background:linear-gradient(180deg,rgba(20,92,138,.36),rgba(20,57,42,.25) 45%,rgba(46,28,20,.55)),url("sources/img.jpg") center/cover fixed;
+  filter:saturate(1.12) contrast(1.05);
+}
+body:after{content:"";position:fixed;inset:0;z-index:-4;pointer-events:none;background:radial-gradient(circle at 50% 15%,transparent 0 25%,rgba(0,0,0,.5) 100%)}
+a{color:inherit;text-decoration:none}
+section{padding:110px 5.5%;position:relative}
+.container{max-width:1200px;margin:auto}
+.pixel{font-family:"Press Start 2P",monospace;letter-spacing:.02em}
+.nav{
+ position:fixed;top:0;left:0;right:0;z-index:50;padding:14px 4%;
+ background:rgba(14,23,19,.78);backdrop-filter:blur(12px);
+ border-bottom:3px solid rgba(89,198,58,.45);box-shadow:0 8px 25px #0005;
+}
+.nav-inner{max-width:1250px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{font:900 14px Inter,ui-sans-serif,system-ui,sans-serif;color:var(--gold);text-shadow:3px 3px #6b4610;white-space:nowrap}
+.nav-links{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.nav-links a{font:700 11px Inter,ui-sans-serif,system-ui,sans-serif;padding:9px 11px;color:#e7f5eb;border-radius:7px;transition:.25s}
+.nav-links a:hover{background:var(--grass);color:#10200f;transform:translateY(-2px)}
+.hero{min-height:100vh;display:grid;place-items:center;text-align:center;padding-top:130px;overflow:hidden}
+.hero-content{max-width:1050px;position:relative;z-index:2}
+.kicker{font:800 10px Inter,ui-sans-serif,system-ui,sans-serif;color:var(--diamond);margin-bottom:28px;text-shadow:0 0 18px #42e8ef88}
+.hero h1{
+ font:900 clamp(38px,8vw,88px) Inter,ui-sans-serif,system-ui,sans-serif;line-height:1.15;color:#f5fff7;
+ text-shadow:0 10px 35px rgba(0,0,0,.35),0 0 30px rgba(85,198,60,.25);
+ animation:titleFloat 3s ease-in-out infinite;
+}
+.hero h1 span{color:var(--grass)}
+.hero-sub{font-size:clamp(16px,2.5vw,25px);margin:28px auto 35px;color:#e7f7ff;max-width:720px}
+.cursor{border-right:3px solid var(--gold);animation:blink .7s steps(1) infinite}
+.pixel-btn{
+ display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:17px 22px;
+ background:linear-gradient(135deg,#66d84b,#319d63);border:1px solid rgba(255,255,255,.24);
+ color:white;font:700 13px Inter,ui-sans-serif,system-ui,sans-serif;cursor:pointer;
+ box-shadow:0 12px 30px rgba(46,170,82,.28),inset 0 1px rgba(255,255,255,.25);
+ transition:.22s ease;border-radius:12px;backdrop-filter:blur(10px);
+}
+.pixel-btn:hover{transform:translateY(-4px);filter:brightness(1.1)}
+.pixel-btn:active{transform:translateY(1px);box-shadow:0 7px 18px rgba(46,170,82,.22)}
+.scroll-cue{margin-top:55px;font:8px "Press Start 2P";color:#d8eee0;opacity:.8}
+.blocks{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.block{position:absolute;width:36px;height:36px;opacity:.35;animation:float 12s linear infinite}
+.block:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#fff3 0 12%,transparent 12% 70%,#0003 70%),var(--c);box-shadow:inset 0 -7px #0002}
+.block:nth-child(1){--c:var(--grass);left:8%;top:28%;animation-delay:-2s}
+.block:nth-child(2){--c:var(--diamond);left:88%;top:22%;animation-delay:-5s}
+.block:nth-child(3){--c:var(--gold);left:16%;top:72%;animation-delay:-8s}
+.block:nth-child(4){--c:var(--purple);left:79%;top:70%;animation-delay:-10s}
+.block:nth-child(5){--c:var(--lava);left:55%;top:18%;animation-delay:-7s}
+.section-title{text-align:center;margin-bottom:55px}
+.section-title h2{font:900 clamp(24px,4vw,38px) Inter,ui-sans-serif,system-ui,sans-serif;color:#fff;text-shadow:0 5px 20px rgba(0,0,0,.3);margin-bottom:16px}
+.section-title p{color:#c9ddd1;max-width:720px;margin:auto}
+.story-wrap{display:grid;grid-template-columns:1fr 1fr;gap:35px;align-items:center}
+.story-intro{background:linear-gradient(145deg,#273a31dd,#14231ddd);border:2px solid #ffffff14;border-radius:18px;padding:32px;box-shadow:var(--shadow)}
+.story-intro p{margin:14px 0;color:#dcebe2}
+.timeline{position:relative;padding-left:35px}
+.timeline:before{content:"";position:absolute;left:9px;top:0;bottom:0;width:5px;background:linear-gradient(var(--grass),var(--diamond),var(--purple),var(--lava));border-radius:5px}
+.t-card{position:relative;margin:0 0 18px;background:rgba(27,41,35,.72);backdrop-filter:blur(14px);border:1px solid #ffffff15;border-radius:16px;padding:19px 22px;box-shadow:0 14px 30px rgba(0,0,0,.22);transition:.3s}
+.t-card:before{content:"";position:absolute;left:-34px;top:23px;width:13px;height:13px;background:var(--gold);border:3px solid #3b2b0a;box-shadow:0 0 0 4px #ffd44733}
+.t-card:hover{transform:translateX(8px);border-color:#55c63c77}
+.t-card h3{font:800 12px Inter,ui-sans-serif,system-ui,sans-serif;color:var(--gold);margin-bottom:9px}
+.t-card p{color:#d6e5dc;font-size:14px}
+.players{background:linear-gradient(180deg,#0d1712aa,#111d18ee)}
+.player-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.player{
+ background:linear-gradient(145deg,#26372f,#16231d);border:2px solid var(--accent);border-radius:20px;padding:23px;text-align:center;
+ box-shadow:0 18px 42px rgba(0,0,0,.24);backdrop-filter:blur(12px);transition:.3s;position:relative;overflow:hidden
+}
+.player:after{content:"";position:absolute;inset:-60% -30%;background:linear-gradient(120deg,transparent 35%,#fff2 50%,transparent 65%);transform:rotate(18deg);transition:.6s}
+.player:hover{transform:translateY(-10px) rotate(-1deg);box-shadow:0 24px 55px rgba(0,0,0,.34)}
+.player:hover:after{transform:translateX(90%) rotate(18deg)}
+.avatar{width:104px;height:104px;margin:0 auto 17px;border:2px solid var(--accent);border-radius:24px;background:repeating-linear-gradient(0deg,#0002 0 6px,transparent 6px 12px),linear-gradient(135deg,var(--accent),#152019);display:grid;place-items:center;font-size:47px;box-shadow:inset 0 0 0 7px #0003}
+.player h3{font:800 10px Inter,ui-sans-serif,system-ui,sans-serif;line-height:1.6}
+.role{font-size:12px;color:#bfd2c5;margin:7px 0 15px}
+.xp{height:13px;background:#0a100d;border:2px solid #000;border-radius:3px;overflow:hidden}
+.xp span{display:block;height:100%;width:var(--xp);background:linear-gradient(90deg,#45c83b,#9bff57);box-shadow:0 0 9px #69ff4d99}
+.quote{font-size:11px;color:#e9f3ec;margin-top:15px;font-style:italic}
+.progress-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;max-width:950px;margin:auto}
+.progress-card{background:rgba(27,40,34,.72);backdrop-filter:blur(14px);border-radius:14px;padding:20px 23px;border:1px solid #fff2;box-shadow:0 10px 25px #0004}
+.progress-top{display:flex;justify-content:space-between;gap:15px;font:800 10px Inter,ui-sans-serif,system-ui,sans-serif;margin-bottom:13px}
+.progress-top b{color:var(--accent)}
+.bar{height:19px;background:#0b100d;border:3px solid #070b09;border-radius:4px;overflow:hidden}
+.bar span{display:block;width:var(--value);height:100%;background:linear-gradient(90deg,var(--accent),#fff5);box-shadow:0 0 15px color-mix(in srgb,var(--accent),transparent 35%);animation:load 1.5s ease both}
+.achievements{background:linear-gradient(180deg,#151f1a,#171b2b)}
+.achievement-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.achievement{
+ padding:24px 17px;text-align:center;background:linear-gradient(145deg,rgba(48,58,62,.9),rgba(25,31,35,.84));backdrop-filter:blur(12px);border:2px solid #5f686d;border-radius:16px;
+ box-shadow:0 16px 35px rgba(0,0,0,.24);transition:.25s;position:relative
+}
+.achievement.unlocked{border-color:var(--gold);background:linear-gradient(145deg,#4a4122,#222019)}
+.achievement.locked{filter:saturate(.25);opacity:.7}
+.achievement:hover{transform:translateY(-6px)}
+.achievement .icon{font-size:42px;margin-bottom:12px;filter:drop-shadow(3px 3px #0008)}
+.achievement h3{font:800 9px Inter,ui-sans-serif,system-ui,sans-serif;line-height:1.7}
+.achievement p{font-size:11px;color:#bccac2;margin-top:9px}
+.book-section{background:radial-gradient(circle at center,#3a214d 0,#1b1826 45%,#111613 100%)}
+.book{
+ max-width:420px;margin:auto;cursor:pointer;transform-style:preserve-3d;transition:.5s;position:relative
+}
+.book:hover{transform:rotateY(-10deg) translateY(-10px)}
+.book-cover{background:linear-gradient(135deg,#9a56d5,#54228b);border:5px solid #32104e;border-radius:8px 15px 15px 8px;padding:55px 30px;text-align:center;box-shadow:20px 25px 35px #0008,inset 8px 0 #ffffff1a}
+.book-cover:before{content:"";display:block;height:8px;background:#d9a6ff;margin:-20px -5px 28px;box-shadow:0 15px #d9a6ff}
+.book-cover h3{font:900 18px Inter,ui-sans-serif,system-ui,sans-serif;line-height:1.6;color:#f3d8ff;text-shadow:3px 3px #3a1454}
+.book-cover p{font-size:13px;color:#ead5f5;margin-top:17px}
+.stats{background:linear-gradient(180deg,#17251f,#101713)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{padding:25px 18px;background:linear-gradient(145deg,#27372f,#17221d);border:1px solid #ffffff16;border-radius:14px;text-align:center;box-shadow:0 14px 32px rgba(0,0,0,.22);transition:.25s}
+.stat:hover{transform:translateY(-6px);border-color:var(--accent)}
+.stat .big{font:24px "Press Start 2P";color:var(--accent);text-shadow:3px 3px #0008}
+.stat small{display:block;margin-top:12px;color:#d5e3da;font-size:11px}
+.gallery{background:linear-gradient(180deg,#101a17,#202e3b)}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.shot{min-height:210px;border:3px dashed #8da79a;border-radius:20px;background:linear-gradient(135deg,rgba(39,75,98,.82),rgba(34,57,44,.82));backdrop-filter:blur(10px);display:grid;place-items:center;text-align:center;padding:25px;position:relative;overflow:hidden;transition:.3s}
+.shot:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#56c9ff20 25%,transparent 25% 50%,#55c63c20 50% 75%,transparent 75%) ;background-size:70px 70px}
+.shot:hover{transform:scale(1.025) rotate(.5deg);border-color:var(--diamond);box-shadow:0 16px 30px #0006}
+.shot span{position:relative;font:800 10px Inter,ui-sans-serif,system-ui,sans-serif;line-height:1.8;text-shadow:3px 3px #000}
+.facts{background:linear-gradient(135deg,#3d2b16,#191b18)}
+.fact-box{max-width:900px;margin:auto;background:#111913d9;border:3px solid var(--gold);border-radius:15px;padding:34px;text-align:center;box-shadow:0 0 35px #ffd44722}
+.fact-box p{font:800 clamp(15px,2.3vw,22px) Inter,ui-sans-serif,system-ui,sans-serif;line-height:2;color:#fff3c4;min-height:85px;display:grid;place-items:center}
+.fact-btn{margin-top:22px;background:linear-gradient(#f5c844,#b88116);border-color:#65490c;text-shadow:2px 2px #805b0f}
+footer{padding:60px 5%;background:#0a0f0c;border-top:4px solid var(--grass);text-align:center}
+footer .logo{font-size:12px;margin-bottom:20px}
+footer p{color:#aebfb5;font-size:13px}
+footer .heart{color:#ff5b68}
+.reveal{opacity:0;transform:translateY(35px);transition:opacity .75s ease,transform .75s ease}
+.reveal.visible{opacity:1;transform:none}
+.modal{position:fixed;inset:0;background:#050807cc;backdrop-filter:blur(9px);display:none;place-items:center;z-index:100;padding:25px}
+.modal.open{display:grid}
+.modal-card{max-width:700px;width:100%;max-height:85vh;overflow:auto;background:linear-gradient(145deg,#241b31,#141a17);border:3px solid var(--purple);border-radius:16px;padding:30px;box-shadow:0 25px 70px #000b;position:relative}
+.modal-card h2{font:900 18px Inter,ui-sans-serif,system-ui,sans-serif;color:#e4c2ff;line-height:1.7;margin-bottom:20px}
+.modal-card p{color:#dbe8df;margin:13px 0}
+.close{position:absolute;right:17px;top:14px;border:0;background:#ffffff12;color:#fff;font-size:24px;border-radius:8px;width:40px;height:40px;cursor:pointer}
+#particles{position:fixed;inset:0;z-index:-2;pointer-events:none}
+.particle{position:absolute;width:4px;height:4px;background:#fff;opacity:.55;box-shadow:0 0 8px currentColor;animation:particle 12s linear infinite}
+@keyframes titleFloat{50%{transform:translateY(-8px)}}
+@keyframes blink{50%{border-color:transparent}}
+@keyframes float{from{transform:translateY(0) rotate(0)}to{transform:translateY(-115vh) rotate(260deg)}}
+@keyframes particle{from{transform:translateY(105vh) translateX(0)}to{transform:translateY(-10vh) translateX(80px)}}
+@keyframes load{from{width:0}}
+@media(max-width:950px){
+ .nav-links{display:none}.story-wrap{grid-template-columns:1fr}.player-grid{grid-template-columns:repeat(2,1fr)}
+ .achievement-grid{grid-template-columns:repeat(2,1fr)}.stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:650px){
+ section{padding:80px 5%}.hero{padding-top:110px}.player-grid,.achievement-grid,.gallery-grid,.progress-grid{grid-template-columns:1fr}
+ .stats-grid{grid-template-columns:repeat(2,1fr)}.stats .stat{padding:20px 8px}.stat .big{font-size:17px}
+ .story-intro{padding:23px}.timeline{padding-left:27px}.timeline:before{left:5px}.t-card:before{left:-28px}
+}
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<nav class="nav">
+ <div class="nav-inner">
+  <a href="#home" class="logo">DEADLINER SMP</a>
+  <div class="nav-links">
+   <a href="#home">Home</a><a href="#story">Story</a><a href="#players">Players</a><a href="#progress">Progress</a>
+   <a href="#achievements">Achievements</a><a href="#gallery">Gallery</a><a href="#future">Future</a><a href="#credits">Credits</a>
+  </div>
+ </div>
+</nav>
+
+<main>
+<section id="home" class="hero">
+ <div class="blocks"><i class="block"></i><i class="block"></i><i class="block"></i><i class="block"></i><i class="block"></i></div>
+ <div class="hero-content reveal">
+  <div class="kicker">✦ SURVIVAL • FRIENDSHIP • ADVENTURE ✦</div>
+  <h1>DEADLINER <span>SMP</span></h1>
+  <p class="hero-sub"><span id="typeText"></span><span class="cursor">&nbsp;</span></p>
+  <a href="#story" class="pixel-btn">📖 Read Our Story</a>
+  <div class="scroll-cue">▼ SCROLL TO EXPLORE ▼</div>
+ </div>
+</section>
+
+<section id="story">
+ <div class="container">
+  <div class="section-title reveal"><h2>Our Story</h2><p>A server diary carved into wood, stone, and memories.</p></div>
+  <div class="story-wrap">
+   <div class="story-intro reveal">
+    <h3 class="pixel" style="font-size:13px;color:var(--grass)">THE FIRST DAY</h3>
+    <p>Spawn was on a tiny island surrounded by water. The island was peaceful, but isolated.</p>
+    <p>So the four players worked together and built a bridge around <strong style="color:var(--gold)">20 blocks long</strong> and <strong style="color:var(--diamond)">2 blocks wide</strong> to reach the mainland.</p>
+    <p>That bridge became our first great achievement — a simple path that turned a lonely spawn into the beginning of a world.</p>
+    <p style="color:#bceeff">Every adventure after that started with four players stepping across those blocks.</p>
+   </div>
+   <div class="timeline reveal">
+    <article class="t-card"><h3>🌳 First Trees Chopped</h3><p>Wood, tools, and the first little shelter. The classic beginning.</p></article>
+    <article class="t-card"><h3>⛏️ First Mining Trip</h3><p>We descended below the surface and learned that the caves were much bigger than expected.</p></article>
+    <article class="t-card"><h3>🌙 First Night Survived</h3><p>Monsters appeared. Torches went up. Somehow, morning arrived.</p></article>
+    <article class="t-card"><h3>🏘️ Village Discovered</h3><p>A village became a new landmark, trading post, and future home base.</p></article>
+    <article class="t-card"><h3>🏠 Houses & Farms</h3><p>Homes were built, crops planted, and the island slowly became a real settlement.</p></article>
+    <article class="t-card"><h3>⛓️ Iron Collected</h3><p>Better tools, stronger gear, and a lot more confidence underground.</p></article>
+    <article class="t-card"><h3>💎 Diamonds Found</h3><p>The first blue sparkle turned an ordinary mining trip into a server legend.</p></article>
+    <article class="t-card"><h3>🕳️ Huge Caves Explored</h3><p>Massive underground chambers revealed how much of this world was still unknown.</p></article>
+    <article class="t-card"><h3>🏰 Stronghold Located</h3><p>The End was no longer a rumor. The stronghold had been found.</p></article>
+   </div>
+  </div>
+  <div class="story-intro reveal" style="margin-top:35px;border-color:#ff7a1866">
+   <p><strong style="color:var(--lava)">The Nether Portal still waits.</strong> The End Portal has been found but not activated. The Ender Dragon still lives.</p>
+  </div>
+ </div>
+</section>
+
+<section id="players" class="players">
+ <div class="container">
+  <div class="section-title reveal"><h2>The Players</h2><p>Four builders, explorers, fighters, and farmers. One shared world.</p></div>
+  <div class="player-grid">
+   <article class="player reveal" style="--accent:#ff5b3d;--xp:80%"><div class="avatar">🔥</div><h3>firebolt7436</h3><div class="role">Builder & Explorer</div><div class="xp"><span></span></div><div style="font-size:11px;color:#cfe8d5;margin-top:7px;font-weight:800">RANK • 80%</div><div class="quote">“If there's room, we can build there.”</div></article>
+   <article class="player reveal" style="--accent:#ffd447;--xp:80%"><div class="avatar">👑</div><h3>NextThrone78</h3><div class="role">Warrior & Adventurer</div><div class="xp"><span></span></div><div style="font-size:11px;color:#cfe8d5;margin-top:7px;font-weight:800">RANK • 80%</div><div class="quote">“Let's see what's on the other side.”</div></article>
+   <article class="player reveal" style="--accent:#42e8ef;--xp:80%"><div class="avatar">💎</div><h3>Killer32438</h3><div class="role">Miner & Treasure Hunter</div><div class="xp"><span></span></div><div style="font-size:11px;color:#cfe8d5;margin-top:7px;font-weight:800">RANK • 80%</div><div class="quote">“There's probably diamonds down there.”</div></article>
+   <article class="player reveal" style="--accent:#7bdc4e;--xp:80%"><div class="avatar">🌾</div><h3>Wasim 1930</h3><div class="role">Farmer & Survival Expert</div><div class="xp"><span></span></div><div style="font-size:11px;color:#cfe8d5;margin-top:7px;font-weight:800">RANK • 80%</div><div class="quote">“First we farm. Then we adventure.”</div></article>
+  </div>
+ </div>
+</section>
+
+<section id="progress">
+ <div class="container">
+  <div class="section-title reveal"><h2>Server Progress</h2><p>Our world is still under construction. The next chapter is waiting.</p></div>
+  <div class="progress-grid">
+   <div class="progress-card reveal" style="--accent:#55c63c;--value:100%"><div class="progress-top"><span>Spawn Island</span><b>100%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#a96b35;--value:100%"><div class="progress-top"><span>Bridge</span><b>100%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#ffd447;--value:100%"><div class="progress-top"><span>Village</span><b>100%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#42e8ef;--value:70%"><div class="progress-top"><span>Mining</span><b>70%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#b96cff;--value:20%"><div class="progress-top"><span>Stronghold</span><b>20%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#ff7a18;--value:0%"><div class="progress-top"><span>Nether</span><b>0%</b></div><div class="bar"><span></span></div></div>
+   <div class="progress-card reveal" style="--accent:#b96cff;--value:0%"><div class="progress-top"><span>End Dragon</span><b>0%</b></div><div class="bar"><span></span></div></div>
+  </div>
+ </div>
+</section>
+
+<section id="achievements" class="achievements">
+ <div class="container">
+  <div class="section-title reveal"><h2>Achievements</h2><p>Milestones unlocked on the road from tiny island to unknown dimensions.</p></div>
+  <div class="achievement-grid">
+   <div class="achievement unlocked reveal"><div class="icon">🌳</div><h3>Getting Wood</h3><p>Acquire your first logs.</p></div>
+   <div class="achievement unlocked reveal"><div class="icon">🌉</div><h3>First Bridge</h3><p>Connect spawn to the mainland.</p></div>
+   <div class="achievement unlocked reveal"><div class="icon">🏠</div><h3>Sweet Home</h3><p>Build a place worth returning to.</p></div>
+   <div class="achievement unlocked reveal"><div class="icon">💎</div><h3>Diamonds!</h3><p>Find the blue treasure underground.</p></div>
+   <div class="achievement unlocked reveal"><div class="icon">🏰</div><h3>Stronghold Found</h3><p>Locate the gateway to the End.</p></div>
+   <div class="achievement locked reveal"><div class="icon">🔥</div><h3>Into the Nether</h3><p>Locked — the portal still waits.</p></div>
+   <div class="achievement locked reveal"><div class="icon">🐉</div><h3>Free the End</h3><p>Locked — the dragon still lives.</p></div>
+  </div>
+ </div>
+</section>
+
+<section class="book-section" id="future">
+ <div class="container">
+  <div class="section-title reveal"><h2>Server Lore</h2><p>Open the enchanted book to read the legend.</p></div>
+  <div class="book reveal" id="book" tabindex="0" role="button" aria-label="Open server lore">
+   <div class="book-cover"><h3>THE CHRONICLES<br>OF DEADLINER</h3><p>✦ An enchanted record of four adventurers ✦</p></div>
+  </div>
+ </div>
+</section>
+
+<section id="gallery" class="gallery">
+ <div class="container">
+  <div class="section-title reveal"><h2>Screenshot Gallery</h2><p>Future snapshots from the world will live here.</p></div>
+  <div class="gallery-grid">
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+   <div class="shot reveal"><span>📸<br><br>Add your screenshot here</span></div>
+  </div>
+ </div>
+</section>
+
+<section class="stats">
+ <div class="container">
+  <div class="section-title reveal"><h2>Server Stats</h2><p>Quick facts from the current world save.</p></div>
+  <div class="stats-grid">
+   <div class="stat reveal" style="--accent:#ffd447"><div class="big">4</div><small>Players</small></div>
+   <div class="stat reveal" style="--accent:#55c63c"><div class="big">Tiny</div><small>Spawn — Tiny Island</small></div>
+   <div class="stat reveal" style="--accent:#a96b35"><div class="big">20</div><small>Bridge — Blocks</small></div>
+   <div class="stat reveal" style="--accent:#ffd447"><div class="big">✓</div><small>Village — Explored</small></div>
+   <div class="stat reveal" style="--accent:#42e8ef"><div class="big">✓</div><small>Caves — Explored</small></div>
+   <div class="stat reveal" style="--accent:#b96cff"><div class="big">✓</div><small>Stronghold — Found</small></div>
+   <div class="stat reveal" style="--accent:#ff7a18"><div class="big">0</div><small>Nether — Not Entered</small></div>
+   <div class="stat reveal" style="--accent:#b96cff"><div class="big">0</div><small>End — Not Reached</small></div>
+  </div>
+ </div>
+</section>
+
+<section class="facts">
+ <div class="container">
+  <div class="section-title reveal"><h2>Random Server Wisdom</h2><p>A little blocky philosophy for the road.</p></div>
+  <div class="fact-box reveal"><p id="fact">Every block tells a story.</p><button class="pixel-btn fact-btn" id="newFact">⟳ New Quote</button></div>
+ </div>
+</section>
+</main>
+
+<footer id="credits">
+ <div class="logo">DEADLINER SMP</div>
+ <p>Made with <span class="heart">❤️</span> by the Deadliner SMP players.</p>
+ <p style="margin-top:8px;font-size:11px">A tiny island. A giant adventure. More chapters loading...</p>
+</footer>
+
+<div class="modal" id="loreModal" aria-hidden="true">
+ <div class="modal-card">
+  <button class="close" id="closeModal" aria-label="Close">×</button>
+  <h2>📖 The Chronicles of Deadliner</h2>
+  <p>In a world of endless oceans, four adventurers awoke upon a tiny island — a green patch surrounded by blue, with no road forward except the one they could build themselves.</p>
+  <p>They gathered wood, shaped stone, and laid a bridge across the water. Twenty blocks long and two blocks wide, it was not a grand monument by any kingdom's measure. Yet to them, it was the first road in a world that had none.</p>
+  <p>From that road came houses, farms, caves, iron, diamonds, and a village waiting beyond the horizon. Every expedition pushed the borders of their map a little farther.</p>
+  <p>Then came the stronghold: an ancient promise beneath the earth. The End Portal was found, silent and waiting.</p>
+  <p>Beyond another portal lies the Nether. Beyond the End lies a dragon. Neither has been faced yet.</p>
+  <p style="color:#dca9ff"><strong>The story is unfinished — and that is exactly what makes it an adventure.</strong></p>
+ </div>
+</div>
+
+<script>
+const typeTarget = document.getElementById("typeText");
+const phrase = "One tiny island started everything.";
+let i = 0, deleting = false;
+function typeLoop(){
+  typeTarget.textContent = phrase.slice(0,i);
+  if(!deleting && i < phrase.length){ i++; setTimeout(typeLoop,65); }
+  else if(!deleting){ deleting=true; setTimeout(typeLoop,1900); }
+  else if(i > 0){ i--; setTimeout(typeLoop,35); }
+  else { deleting=false; setTimeout(typeLoop,500); }
+}
+typeLoop();
+
+const particles = document.getElementById("particles");
+for(let n=0;n<34;n++){
+  const p=document.createElement("i"); p.className="particle";
+  p.style.left=Math.random()*100+"%"; p.style.animationDelay=(-Math.random()*12)+"s";
+  p.style.animationDuration=(8+Math.random()*10)+"s";
+  p.style.color=["#55c63c","#42e8ef","#ffd447","#b96cff","#ff7a18","#ffffff"][n%6];
+  p.style.opacity=.2+Math.random()*.55; p.style.width=p.style.height=(2+Math.random()*4)+"px";
+  particles.appendChild(p);
+}
+
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add("visible")});
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
+
+const facts=[
+ "Every block tells a story.",
+ "The bridge connected more than islands.",
+ "Diamonds shine brighter with friends.",
+ "One day the Ender Dragon will know our names.",
+ "A tiny spawn can hold a huge adventure.",
+ "The best loot is the memory of finding it together.",
+ "Four players. One world. Infinite possibilities.",
+ "Some of the best roads are built one block at a time."
+];
+const fact=document.getElementById("fact");
+document.getElementById("newFact").addEventListener("click",()=>{
+  let next=fact.textContent;
+  while(next===fact.textContent) next=facts[Math.floor(Math.random()*facts.length)];
+  fact.animate([{opacity:0,transform:"translateY(8px)"},{opacity:1,transform:"translateY(0)"}],{duration:350});
+  fact.textContent=next;
+});
+
+const modal=document.getElementById("loreModal");
+const book=document.getElementById("book");
+const closeModal=document.getElementById("closeModal");
+function openLore(){modal.classList.add("open");modal.setAttribute("aria-hidden","false");}
+function closeLore(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");}
+book.addEventListener("click",openLore); book.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")openLore()});
+closeModal.addEventListener("click",closeLore);
+modal.addEventListener("click",e=>{if(e.target===modal)closeLore()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeLore()});
+
+document.querySelectorAll(".nav-links a").forEach(a=>{
+ a.addEventListener("click",()=>{document.querySelector(".nav-links").classList.remove("open")});
+});
+</script>
+</body>
+</html>
